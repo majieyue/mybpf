@@ -17,3 +17,10 @@ all: $(BPFOBJ)
 %.bpf.o: %.bpf.c
 	$(CLANG) -g -O2 -target bpf $(INCLUDES) -D__TARGET_ARCH_$(ARCH) -c $(filter %.bpf.c,$^) -o $@
 	$(LLVM_STRIP) -g $@
+
+install:
+	$(foreach obj,$(BPFOBJ),$(BPFTOOL) prog load $(obj) /sys/fs/bpf/$(subst .bpf.o,,$(obj));)
+
+clean:
+	rm -rf $(BPFOBJ)
+	$(foreach obj,$(BPFOBJ),rm -rf /sys/fs/bpf/$(obj);)
