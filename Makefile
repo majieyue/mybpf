@@ -1,6 +1,6 @@
 OUTPUT := .output
 CLANG ?= clang
-BPFTOOL ?= bpftool
+BPFTOOL ?= ./bpftool
 LLVM_STRIP ?= llvm-strip
 LIBBPF_SRC := $(abspath ../libbpf/src)
 LIBBPF_OBJ := $(abspath $(OUTPUT)/libbpf.a)
@@ -19,8 +19,11 @@ all: $(BPFOBJ)
 	$(LLVM_STRIP) -g $@
 
 install:
-	$(foreach obj,$(BPFOBJ),$(BPFTOOL) prog load $(obj) /sys/fs/bpf/$(subst .bpf.o,,$(obj));)
+	$(foreach obj,$(BPFOBJ),$(BPFTOOL) prog load $(obj) /sys/fs/bpf/$(subst .bpf.o,,$(obj)) autoattach;)
+
+uninstall:
+	$(foreach obj,$(BPFOBJ),rm -rf /sys/fs/bpf/$(subst .bpf.o,,$(obj));)
 
 clean:
 	rm -rf $(BPFOBJ)
-	$(foreach obj,$(BPFOBJ),rm -rf /sys/fs/bpf/$(obj);)
+	$(foreach obj,$(BPFOBJ),rm -rf /sys/fs/bpf/$(subst .bpf.o,,$(obj));)
