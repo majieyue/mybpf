@@ -1,17 +1,19 @@
 OUTPUT := .output
 CLANG ?= clang
 BPFTOOL ?= bpftool
+LLVM_STRIP ?= llvm-strip
 LIBBPF_SRC := $(abspath ../libbpf/src)
 LIBBPF_OBJ := $(abspath $(OUTPUT)/libbpf.a)
 INCLUDES := -I/usr/include/x86_64-linux-gnu/
 CFLAGS := -g -Wall -O0
 ARCH := $(shell uname -m | sed 's/x86_64/x86/')
 
-BPFSRC := $(wildcard *.c)
-BPFOBJ := $(BPFSRC: .c=.o)
+BPFSRC := $(wildcard *.bpf.c)
+BPFOBJ := $(patsubst %.bpf.c, %.bpf.o, $(BPFSRC))
 
 .PHONY: all
+all: $(BPFOBJ)
 
-%.o: %.c
-	$(CLANG) -g -O0 -target bpf $(INCLUDES) -D__TARGET_ARCH_$(ARCH) -c $(filter %.c,$^) -o $@
-
+%.bpf.o: %.bpf.c
+	$(CLANG) -g -O2 -target bpf $(INCLUDES) -D__TARGET_ARCH_$(ARCH) -c $(filter %.bpf.c,$^) -o $@
+	$(LLVM_STRIP) -g $@
